@@ -11,7 +11,7 @@ export default function FavoritesPage() {
     const { startQuiz } = useQuiz();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    const x = 1; 
+
     const [lists, setLists] = useState<FavoriteList[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
