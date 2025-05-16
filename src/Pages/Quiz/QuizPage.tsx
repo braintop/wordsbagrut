@@ -7,7 +7,7 @@ import { FaThumbsUp, FaThumbsDown, FaVolumeUp, FaVolumeMute } from 'react-icons/
 export default function QuizPage() {
     const { quizState, answerWord, goToNextWord, loading } = useQuiz();
     const navigate = useNavigate();
-    const [answered, setAnswered] = useState(false);
+    const [showHebrew, setShowHebrew] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const currentIndexRef = useRef(quizState.currentIndex);
 
@@ -35,6 +35,11 @@ export default function QuizPage() {
             currentIndexRef.current = quizState.currentIndex;
         }
     }, [quizState.currentIndex, loading, quizState.words, isMuted]);
+
+    // Reset showHebrew when moving to next word
+    useEffect(() => {
+        setShowHebrew(false);
+    }, [quizState.currentIndex]);
 
     // Speech synthesis function
     const speakWord = (word: string) => {
@@ -67,16 +72,18 @@ export default function QuizPage() {
 
     // Handle user's answer
     const handleAnswer = (known: boolean) => {
-        // Mark that the user has answered this question
-        setAnswered(true);
-        // Record the answer
+        // Record the answer first
         answerWord(known);
+
+        // Then move to next word after a small delay to ensure the answer is recorded
+        setTimeout(() => {
+            goToNextWord();
+        }, 50);
     };
 
-    // Handle moving to the next word
-    const handleNext = () => {
-        goToNextWord();
-        setAnswered(false); // Reset for the next word
+    // Handle showing Hebrew translation
+    const handleShowHebrew = () => {
+        setShowHebrew(true);
     };
 
     // Calculate progress
@@ -96,10 +103,6 @@ export default function QuizPage() {
             </Container>
         );
     }
-
-    // Get current answer
-    const currentAnswer = quizState.answers[quizState.currentIndex];
-    const isAnswered = answered || currentAnswer !== undefined;
 
     return (
         <Container maxWidth="md">
@@ -154,7 +157,7 @@ export default function QuizPage() {
                             {currentWord.description_en}
                         </Typography>
 
-                        {isAnswered && (
+                        {showHebrew && (
                             <Typography variant="h4" align="center" sx={{ mt: 3, color: 'primary.main' }}>
                                 {currentWord.word_hebrew}
                             </Typography>
@@ -162,7 +165,17 @@ export default function QuizPage() {
                     </CardContent>
                 </Card>
 
-                {!isAnswered ? (
+                {!showHebrew ? (
+                    <Box textAlign="center">
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleShowHebrew}
+                        >
+                            הצג תרגום
+                        </Button>
+                    </Box>
+                ) : (
                     <>
                         <Typography variant="h6" gutterBottom align="center">
                             האם ידעת את המילה?
@@ -186,24 +199,7 @@ export default function QuizPage() {
                             </IconButton>
                         </Box>
                     </>
-                ) : (
-                    <Box textAlign="center" mb={2}>
-                        <Typography variant="h6" color={currentAnswer?.known ? "success.main" : "error.main"}>
-                            {currentAnswer?.known ? "✓ ידעת את המילה" : "✗ לא ידעת את המילה"}
-                        </Typography>
-                    </Box>
                 )}
-
-                <Box textAlign="center">
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleNext}
-                        disabled={!isAnswered}
-                    >
-                        הבא
-                    </Button>
-                </Box>
             </Paper>
         </Container>
     );

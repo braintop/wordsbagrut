@@ -75,6 +75,10 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         const currentWord = quizState.words[quizState.currentIndex];
+        if (!currentWord) {
+            console.error('No current word found at index:', quizState.currentIndex);
+            return;
+        }
 
         // Create a new answers array with the current answer
         const newAnswers = [...quizState.answers];
@@ -83,29 +87,41 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             known: known
         };
 
+        console.log('Recording answer for word:', currentWord.word_english, 'Known:', known);
+        console.log('Current index:', quizState.currentIndex, 'Total words:', quizState.words.length);
+
         const isLastWord = quizState.currentIndex === quizState.words.length - 1;
 
-        setQuizState({
-            ...quizState,
+        setQuizState(prevState => ({
+            ...prevState,
             answers: newAnswers,
-            isComplete: isLastWord,
-        });
+            isComplete: isLastWord
+        }));
     };
 
     // Move to the next word
     const goToNextWord = () => {
+        // Check if we're already at the end or quiz is already complete
         if (quizState.isComplete || quizState.currentIndex >= quizState.words.length - 1) {
-            setQuizState({
-                ...quizState,
+            console.log('Quiz complete! Setting isComplete to true.');
+
+            // Make sure we have all answers before completing
+            const answeredCount = quizState.answers.filter(a => a !== undefined).length;
+            console.log(`Answered ${answeredCount} out of ${quizState.words.length} words`);
+
+            setQuizState(prevState => ({
+                ...prevState,
                 isComplete: true,
-            });
+            }));
             return;
         }
 
-        setQuizState({
-            ...quizState,
-            currentIndex: quizState.currentIndex + 1,
-        });
+        // Otherwise move to next word
+        console.log('Moving to next word, from index', quizState.currentIndex, 'to', quizState.currentIndex + 1);
+        setQuizState(prevState => ({
+            ...prevState,
+            currentIndex: prevState.currentIndex + 1,
+        }));
     };
 
     // Reset the quiz
@@ -115,9 +131,24 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Calculate quiz results
     const getResults = (): QuizResults => {
-        // Filter answers by known (true) and unknown (false)
-        const knownAnswers = quizState.answers.filter(answer => answer && answer.known === true);
-        const unknownAnswers = quizState.answers.filter(answer => answer && answer.known === false);
+        // Check if there are any answers at all
+        if (quizState.answers.length === 0) {
+            return {
+                totalWords: quizState.words.length,
+                knownWords: 0,
+                unknownWords: 0,
+                unknownWordsList: [],
+            };
+        }
+
+        // Filter non-null answers by known (true) and unknown (false)
+        const knownAnswers = quizState.answers.filter(answer => answer !== undefined && answer.known === true);
+        const unknownAnswers = quizState.answers.filter(answer => answer !== undefined && answer.known === false);
+
+        // For debug
+        console.log('Total answers:', quizState.answers.length);
+        console.log('Known answers:', knownAnswers.length);
+        console.log('Unknown answers:', unknownAnswers.length);
 
         return {
             totalWords: quizState.words.length,
