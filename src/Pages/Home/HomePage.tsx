@@ -51,8 +51,11 @@ export default function HomePage() {
             return;
         }
 
-        if (endIndex > allWords.length) {
-            setError(`End index must not exceed ${allWords.length}`);
+        // Ensure we can always choose the maximum available number of words
+        const maxWords = allWords.length > 0 ? allWords.length : 664;
+
+        if (endIndex > maxWords) {
+            setError(`End index must not exceed ${maxWords}`);
             return;
         }
 
@@ -67,7 +70,18 @@ export default function HomePage() {
         const startIdx = startIndex - 1;
         const endIdx = endIndex;
 
-        console.log(`Converted to array indices: ${startIdx} to ${endIdx}`);
+        console.log(`Converted to array indices: ${startIdx} to ${endIdx}, allWords.length: ${allWords.length}`);
+
+        // If the word list seems incomplete, force a refresh
+        if (allWords.length <= 20 && endIndex > 20) {
+            console.log("Word list seems incomplete. Forcing a refresh...");
+            handleRefresh().then(() => {
+                // Start the quiz after refresh completes
+                startQuiz(startIdx, endIdx);
+                navigate('/quiz');
+            });
+            return;
+        }
 
         // Start the quiz with the selected range
         startQuiz(startIdx, endIdx);

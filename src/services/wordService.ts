@@ -7,23 +7,42 @@ export const loadWordsFromCSV = async (bypassCache: boolean = false): Promise<Wo
         // Add cache busting parameter if needed
         const cacheBuster = bypassCache ? `?nocache=${Date.now()}` : '';
 
-        const response = await fetch(`/src/data/words.csv${cacheBuster}`);
-        // If fetching from the bundler fails, try the public folder
-        if (!response.ok) {
+        // Try to load from public folder first (preferred)
+        try {
+            console.log(`Attempting to load words from public folder with cacheBuster: ${cacheBuster}`);
             const publicResponse = await fetch(`/words.csv${cacheBuster}`);
-            if (!publicResponse.ok) {
-                throw new Error('Failed to load words CSV file');
+
+            if (publicResponse.ok) {
+                const csvText = await publicResponse.text();
+                console.log(`Successfully loaded ${csvText.length} bytes from public folder`);
+                const words = parseCsvText(csvText);
+                console.log(`Parsed ${words.length} words from public folder`);
+                return words;
+            } else {
+                console.warn(`Failed to load from public folder: ${publicResponse.status}`);
             }
-            const csvText = await publicResponse.text();
-            return parseCsvText(csvText);
+        } catch (publicError) {
+            console.error('Error loading from public folder:', publicError);
         }
 
-        const csvText = await response.text();
-        return parseCsvText(csvText);
+        // Fallback to src/data folder
+        console.log(`Attempting to load words from src/data folder with cacheBuster: ${cacheBuster}`);
+        const response = await fetch(`/src/data/words.csv${cacheBuster}`);
+
+        if (response.ok) {
+            const csvText = await response.text();
+            console.log(`Successfully loaded ${csvText.length} bytes from src/data folder`);
+            const words = parseCsvText(csvText);
+            console.log(`Parsed ${words.length} words from src/data folder`);
+            return words;
+        } else {
+            throw new Error(`Failed to load words from both locations: ${response.status}`);
+        }
     } catch (error) {
         console.error('Error loading words:', error);
 
         // Fallback to local mock data for development/testing
+        console.warn('Using fallback mock data (only 3 words)');
         return [
             { word_english: 'apple', word_hebrew: 'תפוח', description_en: 'A round fruit' },
             { word_english: 'book', word_hebrew: 'ספר', description_en: 'A set of printed pages' },
@@ -38,6 +57,13 @@ const parseCsvText = (csvText: string): Word[] => {
         header: true,
         skipEmptyLines: true,
     });
+
+    console.log(`CSV parsing complete. Found ${result.data.length} rows.`);
+
+    // Check for errors
+    if (result.errors && result.errors.length > 0) {
+        console.warn('CSV parsing had errors:', result.errors);
+    }
 
     return result.data as Word[];
 };
