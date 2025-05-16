@@ -35,7 +35,6 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [allWords, setAllWords] = useState<Word[]>([]);
     const [quizState, setQuizState] = useState<QuizState>(initialQuizState);
     const [loading, setLoading] = useState(true);
-
     // Load all words on mount
     useEffect(() => {
         const loadWords = async () => {

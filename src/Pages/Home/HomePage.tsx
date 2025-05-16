@@ -77,7 +77,7 @@ export default function HomePage() {
                                     value={startIndex}
                                     onChange={(e) => setStartIndex(parseInt(e.target.value, 10) || 1)}
                                     fullWidth
-                                    inputProps={{ min: 1, max: allWords.length }}
+                                    inputProps={{ min: 1, max: 665 }}
                                     required
                                 />
 
@@ -87,9 +87,9 @@ export default function HomePage() {
                                     value={endIndex}
                                     onChange={(e) => setEndIndex(parseInt(e.target.value, 10) || 1)}
                                     fullWidth
-                                    inputProps={{ min: 1, max: allWords.length }}
+                                    inputProps={{ min: 1, max: 665 }}
                                     required
-                                    helperText={`המספר המקסימלי הוא ${allWords.length}`}
+                                    helperText={`המספר המקסימלי הוא ${665}`}
                                 />
 
                                 {error && <Alert severity="error">{error}</Alert>}
