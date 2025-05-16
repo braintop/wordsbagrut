@@ -41,11 +41,14 @@ const parseCsvText = (csvText: string): Word[] => {
 
 // Get words between start and end indices
 export const getWordsInRange = (words: Word[], startIndex: number, endIndex: number): Word[] => {
-    // Adjust indices to be 0-based (user sees 1-based)
-    const adjustedStart = Math.max(0, startIndex - 1);
-    const adjustedEnd = Math.min(words.length, endIndex);
+    // Make sure indices are valid
+    const validStart = Math.max(0, startIndex);
+    const validEnd = Math.min(words.length, endIndex);
 
-    return words.slice(adjustedStart, adjustedEnd);
+    console.log(`Getting words from index ${validStart} to ${validEnd} (total: ${validEnd - validStart})`);
+
+    // Return words in the specified range
+    return words.slice(validStart, validEnd);
 };
 
 // Calculate quiz results

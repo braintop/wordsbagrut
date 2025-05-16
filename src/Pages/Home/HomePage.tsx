@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Box, Button, Container, TextField, Typography, Paper, CircularProgress, Alert, Stack } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
@@ -13,6 +13,13 @@ export default function HomePage() {
     const [startIndex, setStartIndex] = useState<number>(1);
     const [endIndex, setEndIndex] = useState<number>(20);
     const [error, setError] = useState<string | null>(null);
+
+    // Update endIndex when allWords length changes
+    useEffect(() => {
+        if (allWords.length > 0 && endIndex > allWords.length) {
+            setEndIndex(allWords.length);
+        }
+    }, [allWords.length, endIndex]);
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -32,8 +39,16 @@ export default function HomePage() {
             return;
         }
 
+        console.log(`Starting quiz with words from ${startIndex} to ${endIndex} (UI display)`);
+
+        // Convert from 1-based (UI display) to 0-based (array index)
+        const startIdx = startIndex - 1;
+        const endIdx = endIndex;
+
+        console.log(`Converted to array indices: ${startIdx} to ${endIdx}`);
+
         // Start the quiz with the selected range
-        startQuiz(startIndex, endIndex);
+        startQuiz(startIdx, endIdx);
         navigate('/quiz');
     };
 
@@ -60,7 +75,7 @@ export default function HomePage() {
                                     label="מספר התחלה"
                                     type="number"
                                     value={startIndex}
-                                    onChange={(e) => setStartIndex(parseInt(e.target.value, 10))}
+                                    onChange={(e) => setStartIndex(parseInt(e.target.value, 10) || 1)}
                                     fullWidth
                                     inputProps={{ min: 1, max: allWords.length }}
                                     required
@@ -70,10 +85,11 @@ export default function HomePage() {
                                     label="מספר סיום"
                                     type="number"
                                     value={endIndex}
-                                    onChange={(e) => setEndIndex(parseInt(e.target.value, 10))}
+                                    onChange={(e) => setEndIndex(parseInt(e.target.value, 10) || 1)}
                                     fullWidth
                                     inputProps={{ min: 1, max: allWords.length }}
                                     required
+                                    helperText={`המספר המקסימלי הוא ${allWords.length}`}
                                 />
 
                                 {error && <Alert severity="error">{error}</Alert>}
