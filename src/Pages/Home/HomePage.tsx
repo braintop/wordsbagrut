@@ -16,10 +16,12 @@ export default function HomePage() {
 
     // Update endIndex when allWords length changes
     useEffect(() => {
-        if (allWords.length > 0 && endIndex > allWords.length) {
-            setEndIndex(allWords.length);
+        if (allWords.length > 0) {
+            // Set the initial end index to a reasonable value (either 50 or the max available)
+            const defaultEndIndex = Math.min(50, allWords.length);
+            setEndIndex(defaultEndIndex);
         }
-    }, [allWords.length, endIndex]);
+    }, [allWords.length]);
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -77,7 +79,9 @@ export default function HomePage() {
                                     value={startIndex}
                                     onChange={(e) => setStartIndex(parseInt(e.target.value, 10) || 1)}
                                     fullWidth
+                                    inputProps={{ max: 10000 }}
                                     required
+                                    helperText="המספר המינימלי הוא 1"
                                 />
 
                                 <TextField
@@ -86,7 +90,9 @@ export default function HomePage() {
                                     value={endIndex}
                                     onChange={(e) => setEndIndex(parseInt(e.target.value, 10) || 1)}
                                     fullWidth
+                                    inputProps={{ max: 10000 }}
                                     required
+                                    helperText={`ניתן להזין כל מספר עד ${allWords.length} (סך המילים הזמינות)`}
                                 />
 
                                 {error && <Alert severity="error">{error}</Alert>}
