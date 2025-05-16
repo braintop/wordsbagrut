@@ -12,6 +12,7 @@ interface QuizContextType {
     resetQuiz: () => void;
     getResults: () => QuizResults;
     loading: boolean;
+    refreshWords: () => Promise<void>;
 }
 
 const initialQuizState: QuizState = {
@@ -35,17 +36,41 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [allWords, setAllWords] = useState<Word[]>([]);
     const [quizState, setQuizState] = useState<QuizState>(initialQuizState);
     const [loading, setLoading] = useState(true);
+
     // Load all words on mount
     useEffect(() => {
-        const loadWords = async () => {
-            setLoading(true);
-            const words = await loadWordsFromCSV();
-            setAllWords(words);
-            setLoading(false);
-        };
-
         loadWords();
     }, []);
+
+    // Function to load words
+    const loadWords = async () => {
+        setLoading(true);
+        try {
+            const words = await loadWordsFromCSV();
+            setAllWords(words);
+            console.log(`Loaded ${words.length} words successfully`);
+        } catch (error) {
+            console.error('Error loading words:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Function to refresh words and bypass cache
+    const refreshWords = async (): Promise<void> => {
+        setLoading(true);
+        try {
+            // Add a timestamp to bypass cache
+            const words = await loadWordsFromCSV(true);
+            setAllWords(words);
+            console.log(`Refreshed and loaded ${words.length} words successfully`);
+        } catch (error) {
+            console.error('Error refreshing words:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Start a new quiz with a range of words or custom words
     const startQuiz = (startIndex: number, endIndex: number, customWords?: Word[]) => {
@@ -166,6 +191,7 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         resetQuiz,
         getResults,
         loading,
+        refreshWords,
     };
 
     return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>;

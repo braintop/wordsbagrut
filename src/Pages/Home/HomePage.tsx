@@ -6,13 +6,14 @@ import { useQuiz } from '../../context/QuizContext';
 import { useAuth } from '../../context/AuthContext';
 
 export default function HomePage() {
-    const { allWords, startQuiz, loading } = useQuiz();
+    const { allWords, startQuiz, loading, refreshWords } = useQuiz();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
     const [startIndex, setStartIndex] = useState<number>(1);
     const [endIndex, setEndIndex] = useState<number>(20);
     const [error, setError] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState<boolean>(false);
 
     // Update endIndex when allWords length changes
     useEffect(() => {
@@ -22,6 +23,25 @@ export default function HomePage() {
             setEndIndex(defaultEndIndex);
         }
     }, [allWords.length]);
+
+    // Function to refresh word list and clear cache
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        try {
+            // Force reload the words by bypassing cache
+            if (typeof refreshWords === 'function') {
+                await refreshWords();
+            } else {
+                // Fallback if refreshWords isn't available - reload the page with cache busting
+                window.location.href = `${window.location.pathname}?nocache=${Date.now()}`;
+            }
+        } catch (error) {
+            console.error('Error refreshing words:', error);
+            setError('אירעה שגיאה בטעינת המילים. נסה שוב.');
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -69,6 +89,16 @@ export default function HomePage() {
                     <>
                         <Alert severity="info" sx={{ mb: 3 }}>
                             יש לבחור טווח מילים ללמידה (מתוך {allWords.length} מילים)
+                            <Box display="flex" justifyContent="flex-end" mt={1}>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={handleRefresh}
+                                    disabled={refreshing}
+                                >
+                                    {refreshing ? 'מרענן...' : 'רענן רשימת מילים'}
+                                </Button>
+                            </Box>
                         </Alert>
 
                         <Box component="form" onSubmit={handleSubmit}>

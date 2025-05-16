@@ -2,12 +2,15 @@ import Papa from 'papaparse';
 import type { Word } from '../types/types';
 
 // Load CSV file and parse it
-export const loadWordsFromCSV = async (): Promise<Word[]> => {
+export const loadWordsFromCSV = async (bypassCache: boolean = false): Promise<Word[]> => {
     try {
-        const response = await fetch('/src/data/words.csv');
+        // Add cache busting parameter if needed
+        const cacheBuster = bypassCache ? `?nocache=${Date.now()}` : '';
+
+        const response = await fetch(`/src/data/words.csv${cacheBuster}`);
         // If fetching from the bundler fails, try the public folder
         if (!response.ok) {
-            const publicResponse = await fetch('/words.csv');
+            const publicResponse = await fetch(`/words.csv${cacheBuster}`);
             if (!publicResponse.ok) {
                 throw new Error('Failed to load words CSV file');
             }
